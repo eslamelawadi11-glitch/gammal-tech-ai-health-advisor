@@ -2,12 +2,25 @@ import React from 'react';
 import { Sparkles, Calendar, User, Home, Activity, LogOut, Lock } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import Button from './Button';
+import { useAuth } from '../hooks/useAuth';
 
 const Navbar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { user, logout } = useAuth();
 
   const isGuest = currentPath === '/' || currentPath === '/login';
+
+  const getInitials = (name) => {
+    if (!name) return '??';
+    return name.split(' ').map(n => n[0]).slice(0, 2).join('');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('is_demo_login');
+    localStorage.removeItem('demo_user_email');
+    logout();
+  };
 
   if (isGuest) {
     return (
@@ -39,9 +52,6 @@ const Navbar = () => {
             </div>
           </div>
         </header>
-
-        {/* Guest Mobile Bottom Nav (Optional, mostly they use Top Header, but to keep UI consistent we can add minimal actions) */}
-        {/* We will hide bottom nav for Guest completely, they use the page content buttons */}
       </>
     );
   }
@@ -75,16 +85,21 @@ const Navbar = () => {
 
         <div className="mt-auto border-t border-gray-100 pt-6">
           <div className="flex items-center gap-3 px-2 mb-6">
-            <div className="w-10 h-10 bg-[#D4B892] rounded-full text-white flex items-center justify-center font-bold">أ م</div>
+            <div className="w-10 h-10 bg-[#D4B892] rounded-full text-white flex items-center justify-center font-bold">
+              {getInitials(user?.name)}
+            </div>
             <div>
-              <p className="text-sm font-bold text-vipNavy">أحمد محمد</p>
+              <p className="text-sm font-bold text-vipNavy truncate max-w-[120px]">{user?.name || 'مستخدم جديد'}</p>
               <p className="text-xs text-gray-400">عضو مميز</p>
             </div>
           </div>
-          <Link to="/login" className="flex items-center gap-3 px-2 py-2 text-gray-500 hover:text-red-500 transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-2 py-2 text-gray-500 hover:text-red-500 transition-colors"
+          >
             <LogOut className="w-5 h-5" />
             <span className="text-sm font-bold">تسجيل الخروج</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -93,8 +108,8 @@ const Navbar = () => {
         <Link to="/" className="flex items-center">
           <img src="/logo-navy.png" alt="VIP Healthcare" className="h-12 w-auto mix-blend-multiply object-contain" />
         </Link>
-        <Link to="/profile" className="w-8 h-8 bg-[#D4B892] rounded-full flex items-center justify-center overflow-hidden text-white font-bold text-xs shadow-inner">
-          أ م
+        <Link to="/profile" className="w-10 h-10 bg-[#D4B892] rounded-full flex items-center justify-center overflow-hidden text-white font-bold text-xs shadow-inner">
+          {getInitials(user?.name)}
         </Link>
       </header>
 

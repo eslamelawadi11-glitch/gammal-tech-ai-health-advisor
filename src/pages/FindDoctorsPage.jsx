@@ -8,33 +8,90 @@ import Spinner from '../components/Spinner';
 import { mockDoctors } from '../data/mockData';
 
 const FindDoctorsPage = () => {
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCat, setActiveCat] = useState('الكل');
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const fetchDoctors = async () => {
+    const isGTLoggedIn = window.GammalTech && window.GammalTech.isLoggedIn();
+
+    if (isGTLoggedIn) {
+      try {
+        const data = await window.GammalTech.user.get();
+        if (!data.doctors) {
+          // Seed initial doctors if empty
+          const initialDoctors = mockDoctors;
+          await window.GammalTech.user.save({ ...data, doctors: initialDoctors });
+          setDoctors(initialDoctors);
+        } else {
+          setDoctors(data.doctors);
+        }
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+        setDoctors(mockDoctors);
+      }
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, [activeCat]); // Simulate network request when category changes
+    fetchDoctors();
+  }, []);
 
   const categories = ["الكل", "القلب", "التغذية", "الأسنان", "الأعصاب", "الباطنة", "العيون"];
   
-  const handleSearchChange = (e) => setSearchTerm(e.target.value);
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
+  const handleBook = async (doctor) => {
+    if (window.GammalTech && !window.GammalTech.isLoggedIn() && localStorage.getItem('is_demo_login') !== 'true') {
+      toast.error('يرجى تسجيل الدخول أولاً');
+      window.GammalTech.login();
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => setLoading(false), 800);
+    try {
+      if (window.GammalTech) {
+        window.GammalTech.pay(100, `حجز موعد مع ${doctor.name}`, async (payment) => {
+          // ON DELIVER CALLBACK
+          console.log('Payment ID:', payment.id);
+          
+          const data = await window.GammalTech.user.get();
+          const newBooking = {
+            docName: doctor.name,
+            specialty: doctor.specialty,
+            date: new Date().toLocaleDateString('ar-EG'),
+            paymentId: payment.id
+          };
+          
+          data.bookings = [...(data.bookings || []), newBooking];
+          await window.GammalTech.user.save(data);
+          
+          // Confirm Delivery
+          await window.GammalTech.payment.confirmDelivery(payment.id);
+          
+          toast.success(`تم حجز الموعد مع ${doctor.name} بنجاح!`);
+          setLoading(false);
+        });
+      }
+    } catch (error) {
+      setLoading(false);
+      if (error.code === 'INSUFFICIENT_BALANCE') {
+        toast.error('رصيد المحفظة غير كافٍ');
+      } else {
+        toast.error('حدث خطأ أثناء الدفع');
+      }
+    }
   };
 
-  const handleBook = (name) => {
-    toast.success(`تم إرسال طلب حجز لـ ${name} بنجاح!`, {
-      icon: '✅',
-      style: { borderRadius: '12px', background: '#333', color: '#fff' }
-    });
-  };
+  const filteredDoctors = doctors.filter(doc => {
+    const matchSearch = doc.name.includes(searchTerm) || doc.specialty.includes(searchTerm);
+    const matchCat = activeCat === 'الكل' || doc.specialty.includes(activeCat);
+    return matchSearch && matchCat;
+  });
 
-  const recommendedDoctor = mockDoctors.find(d => d.recommended);
-  const otherDoctors = mockDoctors.filter(d => !d.recommended && d.name.includes(searchTerm));
+  const recommendedDoctor = filteredDoctors.find(d => d.recommended);
+  const otherDoctors = filteredDoctors.filter(d => !d.recommended);
 
   return (
     <div className="font-sans text-vipNavy pb-24 md:pb-12 pt-20 md:pt-10">
@@ -43,21 +100,21 @@ const FindDoctorsPage = () => {
         {/* Header & Search */}
         <header className="mb-8">
           <h1 className="text-2xl font-bold mb-4">البحث عن أخصائي</h1>
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
+          <div className="flex gap-2">
             <div className="flex-grow relative">
               <Search className="w-5 h-5 absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input 
                 type="text" 
                 value={searchTerm}
-                onChange={handleSearchChange}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="ابحث عن أطباء، أو تخصصات..." 
                 className="w-full bg-white border border-gray-200 rounded-xl py-3 pr-11 pl-4 focus:outline-none focus:ring-2 focus:ring-vipGoldDark/50 shadow-sm transition-all"
               />
             </div>
-            <button type="submit" className="bg-vipGoldDark text-white p-3 rounded-xl shadow-sm hover:bg-opacity-90 transition-colors flex-shrink-0 flex items-center justify-center w-12 h-12">
+            <button className="bg-vipGoldDark text-white p-3 rounded-xl shadow-sm hover:bg-opacity-90 transition-colors flex-shrink-0 flex items-center justify-center w-12 h-12">
               <Filter className="w-5 h-5 fill-white" />
             </button>
-          </form>
+          </div>
         </header>
 
         {/* Categories */}
@@ -74,7 +131,7 @@ const FindDoctorsPage = () => {
         </div>
 
         {loading ? (
-          <Spinner text={`جاري البحث عن أطباء ${activeCat}...`} />
+          <Spinner text={`جاري تحديث القائمة...`} />
         ) : (
           <>
             {/* AI Recommended */}
@@ -121,8 +178,8 @@ const FindDoctorsPage = () => {
                       {recommendedDoctor.reason}
                     </div>
 
-                    <Button variant="gold" className="w-full py-3 text-sm" onClick={() => handleBook(recommendedDoctor.name)}>
-                      حجز موعد جديد
+                    <Button variant="gold" className="w-full py-3 text-sm" onClick={() => handleBook(recommendedDoctor)}>
+                      حجز موعد (100 EGP)
                     </Button>
                   </div>
                 </motion.div>
@@ -134,7 +191,7 @@ const FindDoctorsPage = () => {
               <h2 className="text-lg font-bold mb-4">الأخصائيين المتاحين</h2>
               <div className="space-y-4">
                 {otherDoctors.length > 0 ? otherDoctors.map((doc) => (
-                  <DoctorCard key={doc.id} doctor={doc} onBook={() => handleBook(doc.name)} />
+                  <DoctorCard key={doc.id} doctor={doc} onBook={() => handleBook(doc)} />
                 )) : (
                   <div className="text-center text-gray-500 py-10 border border-dashed rounded-xl border-gray-300">
                     لا يوجد أطباء متاحين بهذا البحث.

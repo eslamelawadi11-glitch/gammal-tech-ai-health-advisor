@@ -9,7 +9,9 @@ import DashboardPage from './pages/DashboardPage';
 import FindDoctorsPage from './pages/FindDoctorsPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
+import CheckoutPage from './pages/CheckoutPage';
 import PageWrapper from './components/PageWrapper';
+import AIChatBot from './components/AIChatBot';
 
 
 const ScrollToHash = () => {
@@ -49,6 +51,7 @@ const LayoutConfig = ({ children }) => {
           </div>
         </AnimatePresence>
         {isGuest && currentPath !== '/login' && <Footer />}
+        <AIChatBot />
       </main>
     </div>
   );
@@ -64,12 +67,20 @@ const AnimatedRoutes = () => {
         <Route path="/doctors" element={<PageWrapper><FindDoctorsPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
         <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
+        <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
       </Routes>
     </LayoutConfig>
   );
 };
 
 function App() {
+  useEffect(() => {
+    // Recovery: Settle any interrupted payments from previous sessions
+    if (window.GammalTech && window.GammalTech.payment) {
+      window.GammalTech.payment.settlePending();
+    }
+  }, []);
+
   return (
     <Router>
       <ScrollToHash />

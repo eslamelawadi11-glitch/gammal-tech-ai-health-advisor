@@ -7,29 +7,32 @@ import ProgressBar from '../components/ProgressBar';
 import InsightCard from '../components/InsightCard';
 import Spinner from '../components/Spinner';
 import { mockUser, mockStats, mockInsights, mockAppointments } from '../data/mockData';
+import { useAuth } from '../hooks/useAuth';
 
 const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // تعريف الـ navigate
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   // دالة تسجيل الخروج
   const handleLogout = () => {
-    if (window.GammalTech) {
-      window.GammalTech.logout();
-      navigate('/login');
-    }
+    localStorage.removeItem('is_demo_login');
+    localStorage.removeItem('demo_user_email');
+    logout();
   };
 
   useEffect(() => {
+    const isGTLoggedIn = window.GammalTech && window.GammalTech.isLoggedIn();
+
     // حماية الصفحة: لو مش مسجل دخول ارجع للوجن
-    if (window.GammalTech && !window.GammalTech.isLoggedIn()) {
+    if (!isGTLoggedIn) {
       navigate('/login');
       return;
     }
 
-    const timer = setTimeout(() => setLoading(false), 1200);
+    const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, user]);
 
   if (loading) return <Spinner text="جاري تحديث بياناتك الصحّية..." />;
 
@@ -42,7 +45,7 @@ const DashboardPage = () => {
         {/* Header - تم تعديله ليحتوي على زر الخروج */}
         <header className="mb-8 flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold">مساء الخير، {mockUser.name.split(' ')[0]}</h1>
+            <h1 className="text-2xl font-bold">مساء الخير، {(user?.name || mockUser.name).split(' ')[0]}</h1>
             <p className="text-gray-500">إليك ملخص صحتك اليوم</p>
           </div>
 
@@ -113,30 +116,36 @@ const DashboardPage = () => {
 
         <section className="mb-4">
           <h2 className="text-lg font-bold mb-4">المواعيد القادمة</h2>
-          {mockAppointments.map((apt) => (
-            <div key={apt.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-3">
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 ${apt.avatarColor} rounded-full flex items-center justify-center text-xl overflow-hidden`}>
-                    <User className="text-gray-500 w-6 h-6" />
+          {(user?.bookings || []).length > 0 ? (
+            user.bookings.map((apt, index) => (
+              <div key={index} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-3">
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-vipGoldDark/10 rounded-full flex items-center justify-center text-xl overflow-hidden">
+                      <User className="text-vipGoldDark w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">{apt.docName}</h4>
+                      <p className="text-xs text-gray-500">{apt.specialty}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-sm">{apt.doctorName}</h4>
-                    <p className="text-xs text-gray-500">{apt.specialty}</p>
+                  <span className="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded-md font-bold">مؤكد</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span dir="ltr">{apt.date}</span>
                   </div>
+                  <div className="text-[10px] text-gray-400">ID: {apt.paymentId.slice(-6)}</div>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span dir="ltr">{apt.date}</span>
-                </div>
-                <button className="bg-vipGoldDark text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors">
-                  إدارة الموعد
-                </button>
-              </div>
+            ))
+          ) : (
+            <div className="text-center py-10 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+              <p className="text-gray-400 text-sm">لا توجد مواعيد محجوزة بعد.</p>
+              <Link to="/doctors" className="text-vipGoldDark text-xs font-bold mt-2 inline-block">احجز أول موعد الآن</Link>
             </div>
-          ))}
+          )}
         </section>
 
       </div>

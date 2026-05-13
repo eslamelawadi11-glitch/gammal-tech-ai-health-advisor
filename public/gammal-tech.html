@@ -1,32 +1,287 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Gammal Tech</title>
-  <meta name="description" content="Gammal Tech is a permanent human infrastructure for identity, learning, capability verification, collaboration, and secure value exchange, designed to adapt to any future technology." />
-  <meta name="robots" content="index,follow,max-image-preview:large" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Gammal Tech" />
-  <meta property="og:title" content="Gammal Tech" />
-  <meta property="og:description" content="A permanent human infrastructure for identity, learning, capability verification, collaboration, and secure value exchange." />
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Gammal Tech" />
-  <meta name="twitter:description" content="A permanent human infrastructure for identity, learning, capability verification, collaboration, and secure value exchange." />
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Gammal Tech",
-    "description": "A permanent human infrastructure for identity, learning, capability verification, collaboration, and secure value exchange, designed to adapt to any future technology."
-  }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Search & Booking | Gammal Tech</title>
+    <!-- Gammal Tech SDK -->
+    <script src="https://api.gammal.tech/sdk-web.js"></script>
+    <!-- Tailwind CSS for Premium UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #FDFCF9; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(232, 225, 210, 0.5); }
+        .gradient-text { background: linear-gradient(135deg, #1A1A1A 0%, #4A4A4A 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-primary { background: #1A1A1A; color: white; transition: all 0.3s ease; }
+        .btn-primary:hover { background: #000; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); }
+    </style>
 </head>
-<body>
-  <main>
-    <h1>Gammal Tech</h1>
-    <p>Gammal Tech is a permanent human infrastructure for identity, learning, capability verification, collaboration, and secure value exchange, designed to adapt to any future technology.</p>
-    <a href="https://gammal.tech" style="display:none;">Gammal Tech</a>
-  </main>
+<body class="text-gray-900">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass px-6 py-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-bold text-xl">G</div>
+                <h1 class="text-xl font-bold tracking-tight">Gammal Tech <span class="font-normal text-gray-400 text-sm ml-2">v3.0.1 SDK</span></h1>
+            </div>
+            <div id="auth-status" class="flex items-center gap-4">
+                <!-- Auth status will be injected here -->
+                <div class="animate-pulse w-32 h-10 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-12">
+        
+        <!-- Hero & Search Section -->
+        <section class="text-center mb-16">
+            <h2 class="text-5xl font-bold mb-6 gradient-text">Find & Book Your Doctor</h2>
+            <p class="text-gray-500 text-lg mb-10 max-w-2xl mx-auto">Access premium healthcare services instantly with Gammal Tech Wallet integration.</p>
+            
+            <div class="max-w-2xl mx-auto relative group">
+                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400 group-focus-within:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Search by name or specialty (e.g. Cardiology)..." 
+                    class="w-full pl-12 pr-6 py-5 rounded-2xl border border-gray-200 focus:border-black focus:ring-0 outline-none transition-all shadow-sm bg-white text-lg"
+                    oninput="handleSearch()"
+                >
+            </div>
+        </section>
+
+        <!-- Doctors Grid -->
+        <section class="mb-20">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-2xl font-bold">Featured Doctors</h3>
+                <span id="results-count" class="text-gray-400 text-sm font-medium uppercase tracking-widest"></span>
+            </div>
+            <div id="doctors-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Doctors cards will be injected here -->
+            </div>
+        </section>
+
+        <!-- My Bookings Section -->
+        <section id="bookings-section" class="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm hidden">
+            <h3 class="text-2xl font-bold mb-8 flex items-center gap-3">
+                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                My Bookings
+            </h3>
+            <div id="bookings-list" class="space-y-4">
+                <!-- Bookings will be injected here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-gray-100 text-center text-gray-400 text-sm">
+        <p>&copy; 2026 Gammal Tech. Powered by SDK v3.0.1.</p>
+    </footer>
+
+    <script>
+        let allDoctors = [];
+        let userBookings = [];
+
+        // 1. Initialization
+        window.onload = async () => {
+            console.log('Initializing Gammal Tech SDK...');
+            
+            // Recovery: Handle any interrupted payments
+            if (window.GammalTech && window.GammalTech.payment) {
+                window.GammalTech.payment.settlePending();
+            }
+
+            await updateAuthUI();
+            await loadData();
+            renderDoctors();
+            renderBookings();
+        };
+
+        async function updateAuthUI() {
+            const authContainer = document.getElementById('auth-status');
+            const isLoggedIn = GammalTech.isLoggedIn();
+
+            if (isLoggedIn) {
+                const data = await GammalTech.user.get();
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-tighter leading-none">Logged In</p>
+                            <p class="text-sm font-bold text-black">${data.name || 'Gammal User'}</p>
+                        </div>
+                        <button onclick="logout()" class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </button>
+                    </div>
+                `;
+            } else {
+                authContainer.innerHTML = `
+                    <button onclick="GammalTech.login()" class="btn-primary px-6 py-2.5 rounded-xl font-bold">Login</button>
+                `;
+            }
+        }
+
+        async function logout() {
+            // SDK v3.0.1 doesn't have a direct logout, usually handled by clearing local session or via account portal
+            // For this demo, we simulate it
+            localStorage.removeItem('gt_session'); // Assuming SDK storage
+            window.location.reload();
+        }
+
+        // 2. Data Logic (Simulated Doctors in User Storage)
+        async function loadData() {
+            if (!GammalTech.isLoggedIn()) {
+                // Default doctors for guest view
+                allDoctors = [
+                    { id: 1, name: 'Dr. Ahmed Samir', specialty: 'Cardiology', image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' },
+                    { id: 2, name: 'Dr. Sarah Ibrahim', specialty: 'Dermatology', image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=300&q=80' },
+                    { id: 3, name: 'Dr. John Doe', specialty: 'Neurology', image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=300&q=80' }
+                ];
+                return;
+            }
+
+            const data = await GammalTech.user.get();
+            
+            // Seed doctors if not present
+            if (!data.doctors) {
+                data.doctors = [
+                    { id: 1, name: 'Dr. Ahmed Samir', specialty: 'Cardiology', image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80' },
+                    { id: 2, name: 'Dr. Sarah Ibrahim', specialty: 'Dermatology', image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=300&q=80' },
+                    { id: 3, name: 'Dr. John Doe', specialty: 'Neurology', image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=300&q=80' },
+                    { id: 4, name: 'Dr. Mona Zaki', specialty: 'Pediatrics', image: 'https://images.unsplash.com/photo-1559839734-2b71ca197ec2?auto=format&fit=crop&w=300&q=80' }
+                ];
+                await GammalTech.user.save(data);
+            }
+
+            allDoctors = data.doctors;
+            userBookings = data.bookings || [];
+        }
+
+        // 3. UI Rendering
+        function renderDoctors(filtered = null) {
+            const list = document.getElementById('doctors-list');
+            const doctors = filtered || allDoctors;
+            document.getElementById('results-count').innerText = `${doctors.length} Doctors Found`;
+
+            list.innerHTML = doctors.map(doc => `
+                <div class="card bg-white rounded-3xl border border-gray-100 overflow-hidden flex flex-col">
+                    <div class="h-48 overflow-hidden">
+                        <img src="${doc.image}" alt="${doc.name}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
+                    </div>
+                    <div class="p-6 flex-grow">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${doc.specialty}</span>
+                        <h4 class="text-xl font-bold mt-1 mb-4">${doc.name}</h4>
+                        <button 
+                            onclick="bookAppointment('${doc.name}', ${doc.id})" 
+                            class="w-full btn-primary py-4 rounded-2xl font-bold flex items-center justify-center gap-2"
+                        >
+                            <span>Book Now</span>
+                            <span class="opacity-40 font-normal">|</span>
+                            <span>100 EGP</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderBookings() {
+            const section = document.getElementById('bookings-section');
+            const list = document.getElementById('bookings-list');
+
+            if (userBookings.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            list.innerHTML = userBookings.map(b => `
+                <div class="flex items-center justify-between p-5 bg-[#F8F5F0] rounded-2xl border border-white">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-green-500">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900">${b.docName}</p>
+                            <p class="text-xs text-gray-500">${new Date(b.date).toLocaleDateString()} at ${new Date(b.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-gray-400 uppercase">Paid</span>
+                </div>
+            `).join('');
+        }
+
+        // 4. Search Logic
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = allDoctors.filter(d => 
+                d.name.toLowerCase().includes(query) || 
+                d.specialty.toLowerCase().includes(query)
+            );
+            renderDoctors(filtered);
+        }
+
+        // 5. Payment & Booking Logic
+        async function bookAppointment(docName, docId) {
+            if (!GammalTech.isLoggedIn()) {
+                alert('Please login first to book an appointment.');
+                GammalTech.login();
+                return;
+            }
+
+            try {
+                console.log(`Starting booking for ${docName}...`);
+                
+                // Payment Method
+                GammalTech.pay(
+                    100, 
+                    `Consultation with ${docName}`, 
+                    async (payment) => {
+                        // ON DELIVER CALLBACK
+                        console.log('Payment ID:', payment.id);
+                        
+                        // Add booking to user's progress
+                        const data = await GammalTech.user.get();
+                        const newBooking = { 
+                            docName: docName, 
+                            docId: docId,
+                            date: new Date(),
+                            paymentId: payment.id 
+                        };
+                        
+                        data.bookings = [...(data.bookings || []), newBooking];
+                        await GammalTech.user.save(data);
+                        
+                        // CRITICAL: Confirm Delivery
+                        await GammalTech.payment.confirmDelivery(payment.id);
+                        
+                        // Refresh UI
+                        userBookings = data.bookings;
+                        renderBookings();
+                        
+                        alert('Booking Successful! Dr. Ahmed Samir has been added to your appointments.');
+                    }
+                );
+
+            } catch (error) {
+                // 3. Error Handling
+                if (error.code === 'INSUFFICIENT_BALANCE') {
+                    alert('Insufficient Balance: Please top up your Gammal Tech Wallet.');
+                } else if (error.code === 'USER_CANCELLED') {
+                    console.log('User cancelled the payment.');
+                } else {
+                    console.error('Payment Error:', error);
+                    alert('An unexpected error occurred during payment.');
+                }
+            }
+        }
+    </script>
 </body>
 </html>
