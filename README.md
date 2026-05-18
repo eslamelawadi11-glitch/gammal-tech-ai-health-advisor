@@ -1,1 +1,0 @@
-# gammal-tech-ai-health-advisor
