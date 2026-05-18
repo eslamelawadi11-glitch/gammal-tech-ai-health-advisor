@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Calendar, User, Home, Activity, LogOut, Lock } from 'lucide-react';
+import { Sparkles, Calendar, User, Home, Activity, LogOut, Lock, Stethoscope } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import Button from './Button';
 import { useAuth } from '../hooks/useAuth';
@@ -76,6 +76,11 @@ const Navbar = () => {
             <span className="font-semibold text-sm">حجز الأطباء</span>
           </Link>
 
+          <Link to="/health-advisor" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${currentPath === '/health-advisor' ? 'bg-vipNavy text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-vipNavy'}`}>
+            <Stethoscope className="w-5 h-5" />
+            <span className="font-semibold text-sm">مستشار صحي (AI)</span>
+          </Link>
+
           <p className="text-xs font-bold text-gray-400 mt-6 mb-2 uppercase tracking-wider">الحساب</p>
           <Link to="/profile" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${currentPath === '/profile' ? 'bg-vipNavy text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-vipNavy'}`}>
             <User className="w-5 h-5" />
@@ -125,6 +130,10 @@ const Navbar = () => {
               <Calendar className="w-6 h-6 text-vipGoldDark" />
             </Link>
           </div>
+          <Link to="/health-advisor" className={`flex flex-col items-center gap-1 ${currentPath === '/health-advisor' ? 'text-vipNavy' : 'text-gray-400'} transition-colors`}>
+            <Sparkles className="w-6 h-6" />
+            <span className="text-[10px] font-medium">AI</span>
+          </Link>
           <Link to="/profile" className={`flex flex-col items-center gap-1 ${currentPath === '/profile' ? 'text-vipNavy' : 'text-gray-400'} transition-colors`}>
             <User className="w-6 h-6" />
             <span className="text-[10px] font-medium">حسابي</span>

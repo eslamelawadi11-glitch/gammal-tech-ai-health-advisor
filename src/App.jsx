@@ -10,6 +10,7 @@ import FindDoctorsPage from './pages/FindDoctorsPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import CheckoutPage from './pages/CheckoutPage';
+import HealthAdvisorPage from './pages/HealthAdvisorPage';
 import PageWrapper from './components/PageWrapper';
 import AIChatBot from './components/AIChatBot';
 
@@ -38,7 +39,7 @@ const LayoutConfig = ({ children }) => {
   const currentPath = location.pathname;
   
   // App views that render the Sidebar
-  const isAppView = currentPath === '/dashboard' || currentPath === '/doctors' || currentPath === '/profile';
+  const isAppView = currentPath === '/dashboard' || currentPath === '/doctors' || currentPath === '/health-advisor' || currentPath === '/profile';
   const isGuest = currentPath === '/' || currentPath === '/login';
 
   return (
@@ -65,6 +66,7 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
         <Route path="/dashboard" element={<PageWrapper><DashboardPage /></PageWrapper>} />
         <Route path="/doctors" element={<PageWrapper><FindDoctorsPage /></PageWrapper>} />
+        <Route path="/health-advisor" element={<PageWrapper><HealthAdvisorPage /></PageWrapper>} />
         <Route path="/login" element={<PageWrapper><LoginPage /></PageWrapper>} />
         <Route path="/profile" element={<PageWrapper><ProfilePage /></PageWrapper>} />
         <Route path="/checkout" element={<PageWrapper><CheckoutPage /></PageWrapper>} />
